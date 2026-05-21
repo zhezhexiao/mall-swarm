@@ -117,4 +117,4 @@ sa-token:
   is-print: false
 logstash:
   host: localhost
-  enableInnerLog: false
+  enableInnerLog: true

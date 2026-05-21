@@ -18,7 +18,6 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.UUID;
 
@@ -46,13 +45,13 @@ public class SecuritySecureConfig {
         successHandler.setTargetUrlParameter("redirectTo");
         successHandler.setDefaultTargetUrl(this.adminServer.path("/"));
         http.authorizeHttpRequests((authorizeRequests) -> authorizeRequests //
-                .requestMatchers(new AntPathRequestMatcher(this.adminServer.path("/assets/**")))
+                .requestMatchers(this.adminServer.path("/assets/**"))
                 .permitAll()
-                .requestMatchers(new AntPathRequestMatcher(this.adminServer.path("/actuator/info")))
+                .requestMatchers(this.adminServer.path("/actuator/info"))
                 .permitAll()
-                .requestMatchers(new AntPathRequestMatcher(adminServer.path("/actuator/health")))
+                .requestMatchers(adminServer.path("/actuator/health"))
                 .permitAll()
-                .requestMatchers(new AntPathRequestMatcher(this.adminServer.path("/login")))
+                .requestMatchers(this.adminServer.path("/login"))
                 .permitAll()
                 .dispatcherTypeMatchers(DispatcherType.ASYNC)
                 .permitAll()
@@ -66,10 +65,10 @@ public class SecuritySecureConfig {
                 .csrf((csrf) -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                         .ignoringRequestMatchers(
-                                new AntPathRequestMatcher(this.adminServer.path("/instances"), "POST"),
-        new AntPathRequestMatcher(this.adminServer.path("/instances/*"), "DELETE"),
-        new AntPathRequestMatcher(this.adminServer.path("/actuator/**"))
-                                ));
+                                this.adminServer.path("/instances"),
+                                this.adminServer.path("/instances/*"),
+                                this.adminServer.path("/actuator/**")
+                        ));
         http.rememberMe((rememberMe) -> rememberMe.key(UUID.randomUUID().toString()).tokenValiditySeconds(1209600));
         return http.build();
     }
