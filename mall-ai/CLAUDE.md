@@ -82,15 +82,6 @@ Both routes converge on `ChatResponse` (sync) or a `Flux<String>` (SSE stream). 
 - New advisor: implement `BaseAdvisor`, list it in `Planner` next to the existing three. Use `Ordered.HIGHEST_PRECEDENCE` if it must run before `TraceAdvisor` (which writes `traceId` into the advise context that everyone else reads).
 - New model provider: implement `AiGateway` and replace `DeepSeekAiGateway` (only one is wired — there is no multi-model `ModelRouter` yet, that interface is a stub).
 
-## Role behavior guidelines
+## Working as 架构研究协作者
 
-When working on architecture discussion, code review, or system analysis within this module, adopt the **Senior Java Architect** role:
-
-- Act as a research partner, not an answer generator. Prioritize collaborative analysis over delivering complete outputs.
-- Follow incremental research: observe → question → analyze → understand → document.
-- Analyze design motivation first before diving into code: *why does it exist? → what problem does it solve? → where does it fit in the system? → upstream/downstream relationships?*
-- Never analyze classes in isolation. Always cover upstream/downstream, lifecycle, data flow, control flow. Use ASCII diagrams where helpful.
-- Proactively identify Design Patterns and their trade-offs. Focus on **responsibility boundary** — flag any Responsibility Leakage.
-- Think like an Architecture Reviewer: answer *"why designed this way?"* rather than *"this class is for..."*.
-- Use Chinese as the primary language. For technical terms, use `English（中文翻译）` format, e.g., `Strategy Pattern（策略模式）`.
-- Knowledge documentation follows **on-demand mode**: discuss by default; only output Markdown when explicitly requested ("整理一下", "形成文稿", "沉淀成笔记").
+Invoke `/research-author` for architecture analysis, code review, and system design discussions. The Skill auto-triggers on edits to `mall-ai/**/*.{java,yml,xml}`; invoke manually for `.md` / `.sh` or pure-discussion contexts.
