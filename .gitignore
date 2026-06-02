@@ -28,4 +28,4 @@ document/docker/.env
 *.jks
 
 # ===== Nacos config (contains credentials) =====
-config/
+/config/
