@@ -1,0 +1,21 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: nacos-registry:8848
+      config:
+        server-addr: nacos-registry:8848
+        file-extension: yaml
+  config:
+    import:
+      - optional:nacos:mall-ai-prod.yaml
+  data:
+    redis:
+      host: redis
+
+mall-ai:
+  integration:
+    mall-search:
+      base-url: http://mall-search:8081
+    mall-admin:
+      base-url: http://mall-admin:8080

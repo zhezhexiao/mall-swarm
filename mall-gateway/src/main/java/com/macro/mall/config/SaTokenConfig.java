@@ -49,6 +49,8 @@ public class SaTokenConfig {
                     SaRouter.match(SaHttpMethod.OPTIONS).stop();
                     // 登录认证：商城前台会员认证
                     SaRouter.match("/mall-portal/**", r -> StpMemberUtil.checkLogin()).stop();
+                    // 登录认证：AI 助手（复用商城会员认证）
+                    SaRouter.match("/mall-ai/**", r -> StpMemberUtil.checkLogin()).stop();
                     // 登录认证：管理后台用户认证
                     SaRouter.match("/mall-admin/**", r -> StpUtil.checkLogin());
                     // 权限认证：管理后台用户权限校验

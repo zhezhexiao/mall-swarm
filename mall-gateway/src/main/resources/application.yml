@@ -47,6 +47,12 @@ spring:
                 - Path=/mall-demo/**
               filters:
                 - StripPrefix=1
+            - id: mall-ai
+              uri: lb://mall-ai
+              predicates:
+                - Path=/mall-ai/**
+              filters:
+                - StripPrefix=1
   data:
     redis:
       database: 0

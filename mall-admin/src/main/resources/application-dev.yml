@@ -8,4 +8,4 @@ spring:
         file-extension: yaml
   config:
     import:
-      - nacos:mall-admin-dev.yaml?refreshEnabled=true
+      - optional:nacos:mall-admin-dev.yaml?refreshEnabled=true

@@ -1,0 +1,54 @@
+server:
+  port: 8002
+spring:
+  application:
+    name: mall-ai
+  profiles:
+    active: dev
+  data:
+    redis:
+      host: localhost
+      database: 1
+      port: 6379
+      timeout: 3000ms
+  ai:
+    openai:
+      api-key: ${DEEPSEEK_API_KEY:sk-unset}
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-chat
+          temperature: 0.7
+          max-tokens: 2048
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        fail-fast: false
+sa-token:
+  token-name: Authorization
+  token-prefix: Bearer
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# mall-ai custom config
+mall-ai:
+  agent:
+    max-steps: 5
+    timeout: 45s
+  tool:
+    product:
+      timeout: 5s
+    order:
+      timeout: 5s
+  conversation:
+    ttl: 30m
+    max-history-rounds: 10

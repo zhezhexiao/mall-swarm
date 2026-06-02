@@ -10,56 +10,56 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - /mydata/mysql/data/db:/var/lib/mysql #数据文件挂载
-      - /mydata/mysql/data/conf:/etc/mysql/conf.d #配置文件挂载
-      - /mydata/mysql/log:/var/log/mysql #日志文件挂载
+      - /data/docker-data/mysql/data/db:/var/lib/mysql #数据文件挂载
+      - /data/docker-data/mysql/data/conf:/etc/mysql/conf.d #配置文件挂载
+      - /data/docker-data/mysql/log:/var/log/mysql #日志文件挂载
   redis:
     image: redis:7
     container_name: redis
     command: redis-server --appendonly yes
     volumes:
-      - /mydata/redis/data:/data #数据文件挂载
+      - /data/docker-data/redis/data:/data #数据文件挂载
     ports:
       - 6379:6379
   nginx:
     image: nginx:1.22
     container_name: nginx
     volumes:
-      - /mydata/nginx/conf:/etc/nginx #配置文件挂载
-      - /mydata/nginx/html:/usr/share/nginx/html #静态资源根目录挂载
-      - /mydata/nginx/log:/var/log/nginx #日志文件挂载
+      - /data/docker-data/nginx/conf:/etc/nginx #配置文件挂载
+      - /data/docker-data/nginx/html:/usr/share/nginx/html #静态资源根目录挂载
+      - /data/docker-data/nginx/log:/var/log/nginx #日志文件挂载
     ports:
       - 80:80
   rabbitmq:
     image: rabbitmq:3.9.11-management
     container_name: rabbitmq
     volumes:
-      - /mydata/rabbitmq/data:/var/lib/rabbitmq #数据文件挂载
-      - /mydata/rabbitmq/log:/var/log/rabbitmq #日志文件挂载
+      - /data/docker-data/rabbitmq/data:/var/lib/rabbitmq #数据文件挂载
+      - /data/docker-data/rabbitmq/log:/var/log/rabbitmq #日志文件挂载
     ports:
       - 5672:5672
       - 15672:15672
   elasticsearch:
-    image: elasticsearch:7.17.3
+    image: elasticsearch:8.17.4
     container_name: elasticsearch
-    user: root
     environment:
       - "cluster.name=elasticsearch" #设置集群名称为elasticsearch
       - "discovery.type=single-node" #以单一节点模式启动
       - "ES_JAVA_OPTS=-Xms512m -Xmx1024m" #设置使用jvm内存大小
+      - "xpack.security.enabled=false" #关闭安全认证
     volumes:
-      - /mydata/elasticsearch/plugins:/usr/share/elasticsearch/plugins #插件文件挂载
-      - /mydata/elasticsearch/data:/usr/share/elasticsearch/data #数据文件挂载
+      - /data/docker-data/elasticsearch/plugins:/usr/share/elasticsearch/plugins #插件文件挂载
+      - /data/docker-data/elasticsearch/data:/usr/share/elasticsearch/data #数据文件挂载
     ports:
       - 9200:9200
       - 9300:9300
   logstash:
-    image: logstash:7.17.3
+    image: logstash:8.17.4
     container_name: logstash
     environment:
       - TZ=Asia/Shanghai
     volumes:
-      - /mydata/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf #挂载logstash的配置文件
+      - /data/docker-data/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf #挂载logstash的配置文件
     depends_on:
       - elasticsearch #kibana在elasticsearch启动之后再启动
     links:
@@ -70,7 +70,7 @@ services:
       - 4562:4562
       - 4563:4563
   kibana:
-    image: kibana:7.17.3
+    image: kibana:8.17.4
     container_name: kibana
     links:
       - elasticsearch:es #可以用es这个域名访问elasticsearch服务
@@ -84,7 +84,7 @@ services:
     image: mongo:4
     container_name: mongo
     volumes:
-      - /mydata/mongo/db:/data/db #数据文件挂载
+      - /data/docker-data/mongo/db:/data/db #数据文件挂载
     ports:
       - 27017:27017
   nacos-registry:
@@ -94,3 +94,5 @@ services:
       - "MODE=standalone"
     ports:
       - 8848:8848
+      - 9848:9848
+      - 9849:9849

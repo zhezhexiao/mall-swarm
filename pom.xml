@@ -19,6 +19,7 @@
         <module>mall-monitor</module>
         <module>mall-gateway</module>
         <module>mall-auth</module>
+        <module>mall-ai</module>
     </modules>
 
     <parent>
@@ -32,7 +33,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <skipTests>true</skipTests>
-        <docker.host>http://192.168.3.101:2375</docker.host>
+        <docker.host>unix:///var/run/docker.sock</docker.host>
         <docker.maven.plugin.version>0.45.1</docker.maven.plugin.version>
         <java.version>17</java.version>
         <spring-boot.version>3.5.14</spring-boot.version>
@@ -58,6 +59,7 @@
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <mall-common.version>1.0-SNAPSHOT</mall-common.version>
         <mall-mbg.version>1.0-SNAPSHOT</mall-mbg.version>
+        <spring-ai.version>1.0.0-M6</spring-ai.version>
     </properties>
 
     <dependencies>
@@ -104,6 +106,14 @@
                 <groupId>com.alibaba.cloud</groupId>
                 <artifactId>spring-cloud-alibaba-dependencies</artifactId>
                 <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!--Spring AI 相关依赖-->
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -298,7 +308,7 @@
                                 <!--定义镜像构建行为-->
                                 <build>
                                     <!--定义基础镜像-->
-                                    <from>openjdk:17</from>
+                                    <from>eclipse-temurin:17-jre</from>
                                     <args>
                                         <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
                                     </args>

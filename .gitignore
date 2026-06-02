@@ -5,7 +5,27 @@ target/
 .idea/
 *.iml
 
+# Environment #
+.env
+
 # Eclipse #
 .settings/
 .classpath
 .project
+# ===== Local / Secrets (added for safety) =====
+.env
+.env.*
+*.env.local
+*.env.*.local
+document/docker/.env
+**/application-local.yml
+**/application-local.yaml
+**/application-docker.yml
+**/application-docker.yaml
+*.pem
+*.key
+*.p12
+*.jks
+
+# ===== Nacos config (contains credentials) =====
+config/
