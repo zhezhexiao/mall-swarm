@@ -1,6 +1,7 @@
 package com.macro.mall.common.exception;
 
 import com.macro.mall.common.api.CommonResult;
+import cn.dev33.satoken.exception.NotLoginException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -51,5 +52,11 @@ public class GlobalExceptionHandler {
             }
         }
         return CommonResult.validateFailed(message);
+    }
+
+    @ResponseBody
+    @ExceptionHandler(value = NotLoginException.class)
+    public CommonResult handleNotLoginException(NotLoginException e) {
+        return CommonResult.unauthorized(null);
     }
 }
