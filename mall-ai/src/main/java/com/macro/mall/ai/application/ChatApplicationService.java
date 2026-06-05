@@ -46,6 +46,13 @@ public class ChatApplicationService {
                     .timestamp(Instant.now()).build());
 
             conversationManager.save(ctx);
+            // 首轮结束 → 异步生成标题
+            if (ctx.getHistory().size() == 2) {
+                String userMsg = ctx.getHistory().get(0).getContent();
+                String asstMsg = ctx.getHistory().get(1).getContent();
+                conversationManager.generateTitleAsync(
+                        ctx.getConversationId(), userMsg, asstMsg);
+            }
             response.setConversationId(ctx.getConversationId());
             return response;
         } finally {
@@ -80,6 +87,12 @@ public class ChatApplicationService {
                     conversationManager.save(ctx);
                     log.info("[{}] Stream complete: {} chars, conv={}",
                             traceId, fullReply.length(), convId);
+                    // 首轮结束（2条消息）→ 异步生成标题
+                    if (ctx.getHistory().size() == 2) {
+                        String userMsg = ctx.getHistory().get(0).getContent();
+                        String asstMsg = ctx.getHistory().get(1).getContent();
+                        conversationManager.generateTitleAsync(convId, userMsg, asstMsg);
+                    }
                     MDC.clear();
                 })
                 .doOnError(e -> {

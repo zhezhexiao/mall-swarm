@@ -1,8 +1,12 @@
 package com.macro.mall.ai.conversation;
 
 import com.macro.mall.ai.config.ConversationProperties;
+import com.macro.mall.ai.integration.mysql.MySQLConversationStore;
+import com.macro.mall.ai.model.AiConversation;
 import com.macro.mall.ai.model.Message;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -13,28 +17,47 @@ import java.util.UUID;
 @Component
 public class ConversationManager {
 
-    private final ConversationStore store;
+    private final ConversationStore redisStore;
+    private final MySQLConversationStore mysqlStore;
     private final ConversationProperties props;
+    private final ChatClient.Builder chatClientBuilder;
 
-    public ConversationManager(ConversationStore store, ConversationProperties props) {
-        this.store = store;
+    public ConversationManager(ConversationStore redisStore,
+                               MySQLConversationStore mysqlStore,
+                               ConversationProperties props,
+                               ChatClient.Builder chatClientBuilder) {
+        this.redisStore = redisStore;
+        this.mysqlStore = mysqlStore;
         this.props = props;
+        this.chatClientBuilder = chatClientBuilder;
     }
 
     /**
      * 统一入口：加载或创建会话。
+     * Redis hit → 直接返回
+     * Redis miss → MySQL 回源 → 写回 Redis → 返回
+     * 都没有 → 新建
      */
     public ConversationContext loadOrCreate(String conversationId, String userId) {
-        // 1. 尝试加载已存在会话
+        // 1. 尝试 Redis
         if (conversationId != null) {
-            ConversationContext existing = store.load(conversationId);
+            ConversationContext existing = redisStore.load(conversationId);
             if (existing != null) {
                 existing.setLastActiveAt(Instant.now());
                 return existing;
             }
+
+            // 2. Redis miss → MySQL 回源
+            ConversationContext recovered = mysqlStore.loadFromMySQL(conversationId);
+            if (recovered != null) {
+                recovered.setLastActiveAt(Instant.now());
+                redisStore.save(recovered); // 写回 Redis
+                log.info("Recovered conversation from MySQL: {}", conversationId);
+                return recovered;
+            }
         }
 
-        // 2. 创建新会话
+        // 3. 创建新会话
         ConversationContext ctx = ConversationContext.builder()
                 .conversationId(UUID.randomUUID().toString())
                 .userId(userId)
@@ -48,12 +71,69 @@ public class ConversationManager {
     }
 
     /**
-     * 持久化并裁剪历史。
+     * 持久化：Redis(同步) + MySQL(异步)。
      */
     public void save(ConversationContext ctx) {
         ctx.setLastActiveAt(Instant.now());
         trimHistory(ctx);
-        store.save(ctx);
+        redisStore.save(ctx);
+        mysqlStore.persistAsync(ctx);
+    }
+
+    /**
+     * 对话列表。
+     */
+    public List<AiConversation> listByUserId(Long userId, int page, int size) {
+        return mysqlStore.listByUserId(userId, size, page * size);
+    }
+
+    /**
+     * 软删。
+     */
+    public void delete(String convId, Long userId) {
+        redisStore.expire(convId); // 删 Redis key
+        mysqlStore.softDelete(convId, userId);
+    }
+
+    /**
+     * 重命名。
+     */
+    public void rename(String convId, String title) {
+        mysqlStore.updateTitle(convId, title);
+    }
+
+    /**
+     * 将匿名对话归属到真实用户。
+     */
+    public int claimConversations(long realUserId) {
+        return mysqlStore.claimConversations(realUserId);
+    }
+
+    /**
+     * 异步生成对话标题（首轮结束后调用）。
+     * 用 DeepSeek 生成 ≤15 字的中文摘要。
+     */
+    @Async
+    public void generateTitleAsync(String convId, String userMsg, String assistantMsg) {
+        try {
+            String prompt = "请用一句中文概括这段对话的主题，不超过15个字，不要标点符号。\n"
+                    + "用户：" + userMsg.substring(0, Math.min(userMsg.length(), 100)) + "\n"
+                    + "助手：" + assistantMsg.substring(0, Math.min(assistantMsg.length(), 200));
+            String title = chatClientBuilder.build()
+                    .prompt(prompt)
+                    .call()
+                    .content();
+            if (title != null) {
+                title = title.trim().replaceAll("[。！？,.]", "");
+                if (title.length() > 15) title = title.substring(0, 15);
+            }
+            if (title != null && !title.isEmpty()) {
+                mysqlStore.updateTitle(convId, title);
+                log.info("Generated title for conv={}: {}", convId, title);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to generate title for conv={}: {}", convId, e.getMessage());
+        }
     }
 
     /**
@@ -63,10 +143,9 @@ public class ConversationManager {
     private void trimHistory(ConversationContext ctx) {
         List<Message> history = ctx.getHistory();
         int maxRounds = props.getMaxHistoryRounds();
-        int maxMessages = maxRounds * 2; // user + assistant per round
+        int maxMessages = maxRounds * 2;
 
         if (history.size() > maxMessages) {
-            // 保留前 2 条（首次 user + assistant）作为锚点
             int anchorSize = Math.min(4, history.size() - maxMessages);
             List<Message> anchors = history.subList(0, anchorSize);
             List<Message> recent = history.subList(history.size() - maxMessages, history.size());
@@ -74,10 +153,6 @@ public class ConversationManager {
             history.clear();
             history.addAll(anchors);
             history.addAll(recent);
-
-            log.debug("Trimmed history: {} -> {} messages", 
-                    anchors.size() + recent.size() + (history.size() - anchors.size() - recent.size()),
-                    history.size());
         }
     }
 }

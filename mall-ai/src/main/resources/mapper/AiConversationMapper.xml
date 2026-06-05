@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.ai.mapper.AiConversationMapper">
+
+    <insert id="insert" parameterType="com.macro.mall.ai.model.AiConversation" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_conversation (conv_id, user_id, title, message_count, created_at, last_active_at)
+        VALUES (#{convId}, #{userId}, #{title}, #{messageCount}, #{createdAt}, #{lastActiveAt})
+    </insert>
+
+    <select id="selectByConvId" resultType="com.macro.mall.ai.model.AiConversation">
+        SELECT * FROM ai_conversation WHERE conv_id = #{convId} AND deleted = 0
+    </select>
+
+    <select id="selectByUserId" resultType="com.macro.mall.ai.model.AiConversation">
+        SELECT * FROM ai_conversation
+        WHERE user_id = #{userId} AND deleted = 0
+        ORDER BY last_active_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <update id="updateLastActive">
+        UPDATE ai_conversation
+        SET last_active_at = #{lastActiveAt}, message_count = #{messageCount}
+        WHERE conv_id = #{convId}
+    </update>
+
+    <update id="updateTitle">
+        UPDATE ai_conversation SET title = #{title} WHERE conv_id = #{convId}
+    </update>
+
+    <update id="softDelete">
+        UPDATE ai_conversation SET deleted = 1, deleted_at = NOW()
+        WHERE conv_id = #{convId} AND user_id = #{userId}
+    </update>
+
+    <update id="claimConversations">
+        UPDATE ai_conversation SET user_id = #{realUserId}, claim_status = 'claimed'
+        WHERE user_id = #{anonymousUserId} AND claim_status = 'anonymous' AND deleted = 0
+    </update>
+
+    <select id="selectAnonymous" resultType="com.macro.mall.ai.model.AiConversation">
+        SELECT * FROM ai_conversation
+        WHERE user_id = 0 AND claim_status = 'anonymous' AND deleted = 0
+        ORDER BY last_active_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+</mapper>
