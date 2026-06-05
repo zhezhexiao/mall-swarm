@@ -1,7 +1,9 @@
 package com.macro.mall.ai.controller;
 
+import com.macro.mall.ai.conversation.ConversationContext;
 import com.macro.mall.ai.conversation.ConversationManager;
 import com.macro.mall.ai.model.AiConversation;
+import com.macro.mall.ai.model.Message;
 import com.macro.mall.ai.util.StpMemberUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +39,13 @@ public class ConversationController {
         return conversationManager.listByUserId(userId, 0, 1000)
                 .stream().filter(c -> c.getConvId().equals(convId))
                 .findFirst().orElse(null);
+    }
+
+    @GetMapping("/{convId}/messages")
+    public List<Message> messages(@PathVariable String convId) {
+        Long userId = currentUserId();
+        ConversationContext ctx = conversationManager.loadOrCreate(convId, String.valueOf(userId));
+        return ctx.getHistory();
     }
 
     @PostMapping("/claim")
