@@ -102,6 +102,7 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
     external_links:
+      - mysql:db
       - redis:redis
       - nacos-registry:nacos-registry
       - mall-search:mall-search

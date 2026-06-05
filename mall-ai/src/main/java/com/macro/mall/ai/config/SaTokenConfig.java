@@ -21,6 +21,6 @@ public class SaTokenConfig implements WebMvcConfigurer {
                 // SSE 流式端点：Tomcat 异步分发时 Sa-Token ThreadLocal 已失效，
                 // 会抛 SaTokenContextException 导致连接无法正常关闭。
                 // 该端点的鉴权由 Gateway + 初始请求时的拦截器保障。
-                .excludePathPatterns("/ai/chat/stream");
+                .excludePathPatterns("/ai/chat/stream", "/ai/conversations");
     }
 }

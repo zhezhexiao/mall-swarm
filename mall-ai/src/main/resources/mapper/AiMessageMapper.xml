@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.ai.mapper.AiMessageMapper">
+
+    <insert id="insertBatch">
+        INSERT INTO ai_message (conv_id, role, content, products_json, created_at)
+        VALUES
+        <foreach collection="messages" item="m" separator=",">
+            (#{m.convId}, #{m.role}, #{m.content}, #{m.productsJson}, #{m.createdAt})
+        </foreach>
+    </insert>
+
+    <select id="selectByConvId" resultType="com.macro.mall.ai.model.AiMessage">
+        SELECT * FROM ai_message
+        WHERE conv_id = #{convId}
+        ORDER BY id ASC
+    </select>
+
+    <select id="countByConvId" resultType="int">
+        SELECT COUNT(*) FROM ai_message WHERE conv_id = #{convId}
+    </select>
+
+</mapper>
