@@ -21,8 +21,8 @@ public class MallAiSaTokenDao implements SaTokenDao {
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public MallAiSaTokenDao() {
-        LettuceConnectionFactory factory = new LettuceConnectionFactory("redis", 6379);
+    public MallAiSaTokenDao(String host, int port) {
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(host, port);
         factory.afterPropertiesSet();
         this.redis = new StringRedisTemplate(factory);
     }
